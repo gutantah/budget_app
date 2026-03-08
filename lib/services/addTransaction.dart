@@ -20,6 +20,8 @@ class AddTransaction extends StatefulWidget {
 }
 
 class _AddTransactionState extends State<AddTransaction> {
+  DateTime selectedDate = DateTime.now();
+
   final TextEditingController amountController = TextEditingController();
   final TextEditingController titleController = TextEditingController();
 
@@ -27,14 +29,15 @@ class _AddTransactionState extends State<AddTransaction> {
   bool isIncome = false;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    if(widget.existingTransaction != null){
+    if (widget.existingTransaction != null) {
       final t = widget.existingTransaction!;
       titleController.text = t.title;
       amountController.text = t.amount.toString();
       selectedCategory = t.category;
       isIncome = t.isIncome;
+      selectedDate = t.date;
     }
   }
 
@@ -54,15 +57,31 @@ class _AddTransactionState extends State<AddTransaction> {
     }
 
     final transaction = TransactionModel(
-      id: Random().nextInt(1000000).toString(),
+      id:
+          widget.existingTransaction?.id ??
+          Random().nextInt(1000000).toString(),
       title: title,
       amount: amount,
       category: selectedCategory,
-      date: DateTime.now(),
+      date: selectedDate,
       isIncome: isIncome,
     );
 
     Navigator.pop(context, transaction);
+  }
+
+  Future<void> pickDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+      });
+    }
   }
 
   @override
@@ -72,6 +91,7 @@ class _AddTransactionState extends State<AddTransaction> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Title input
           TextField(
             controller: titleController,
             decoration: const InputDecoration(
@@ -79,9 +99,9 @@ class _AddTransactionState extends State<AddTransaction> {
               border: OutlineInputBorder(),
             ),
           ),
-
           const SizedBox(height: 12),
 
+          // Amount input
           TextField(
             controller: amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -90,17 +110,15 @@ class _AddTransactionState extends State<AddTransaction> {
               border: OutlineInputBorder(),
             ),
           ),
-
           const SizedBox(height: 12),
 
+          // Category dropdown
           DropdownButtonFormField<String>(
             value: selectedCategory,
             items: categories
                 .map(
-                  (category) => DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
-                  ),
+                  (category) =>
+                      DropdownMenuItem(value: category, child: Text(category)),
                 )
                 .toList(),
             onChanged: (value) {
@@ -115,18 +133,29 @@ class _AddTransactionState extends State<AddTransaction> {
               border: OutlineInputBorder(),
             ),
           ),
-
           const SizedBox(height: 10),
 
+          // Income/Expense switch
           SwitchListTile(
             title: Text(isIncome ? "Income" : "Expense"),
             value: isIncome,
             onChanged: (value) {
               setState(() {
                 isIncome = value;
-                
               });
             },
+          ),
+
+          // Date picker
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Date: ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+                style: TextStyle(fontSize: 16),
+              ),
+              TextButton(onPressed: pickDate, child: const Text("Choose Date")),
+            ],
           ),
         ],
       ),
@@ -135,10 +164,7 @@ class _AddTransactionState extends State<AddTransaction> {
           onPressed: () => Navigator.pop(context),
           child: const Text("Cancel"),
         ),
-        ElevatedButton(
-          onPressed: submitTransaction,
-          child: const Text("Add"),
-        ),
+        ElevatedButton(onPressed: submitTransaction, child: const Text("Add")),
       ],
     );
   }

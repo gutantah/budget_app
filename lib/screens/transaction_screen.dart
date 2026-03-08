@@ -71,9 +71,10 @@ class TransactionScreen extends StatelessWidget {
                   children: [
                     Text(
                       "\$${transaction.amount.toStringAsFixed(2)}",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: transaction.isIncome ? Colors.greenAccent.shade400 : Colors.redAccent.shade400,
                       ),
                     ),
 

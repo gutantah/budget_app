@@ -1,5 +1,7 @@
 import '../models/transaction_model.dart';
 
+enum TimeFilter { currentMonth, currentQuarter, currentYear, allTime }
+
 class TransactionService {
   final List<TransactionModel> _transactions = [];
   List<TransactionModel> get transactions => _transactions;
@@ -19,13 +21,51 @@ class TransactionService {
     _transactions.removeWhere((t) => t.id == id);
   }
 
-  double get totalIncome => _transactions
-      .where((t) => t.isIncome)
-      .fold(0, (sum, t) => sum + t.amount);
+  List<TransactionModel> getFilteredTransactions(TimeFilter filter){
+    final now = DateTime.now();
+    DateTime startDate;
+    switch (filter) {
+      case TimeFilter.currentMonth:
+        startDate = DateTime(now.year, now.month, 1);
+        break;
+      case TimeFilter.currentQuarter:
+        final currentQuarter = (now.month - 1) ~/ 3 + 1;
+        startDate = DateTime(now.year, (currentQuarter - 1) * 3 + 1, 1);
+        break;
+      case TimeFilter.currentYear:
+        startDate = DateTime(now.year, 1, 1);
+        break;
+      case TimeFilter.allTime:
+        return _transactions; 
+    }
+    return _transactions.where((t) => !t.date.isBefore(startDate)).toList();
+  }
+    double calculateTotalIncome(List<TransactionModel> transact) {
+      return transact.where((t) => t.isIncome).fold(0, (sum, t) => sum + t.amount);
+    }
+    double calculateTotalExpense(List<TransactionModel> transact) {
+      return transact.where((t) => !t.isIncome).fold(0, (sum, t) => sum + t.amount);
+    }
+    double calculateBalance(List<TransactionModel> transact) {
+      return calculateTotalIncome(transact) - calculateTotalExpense(transact);
+    }
 
-  double get totalExpense => _transactions
-      .where((t) => !t.isIncome)
-      .fold(0, (sum, t) => sum + t.amount);
+    double get totalIncome => calculateTotalIncome(transactions);
+    double get totalExpense => calculateTotalExpense(transactions);
+    double get balance => calculateBalance(transactions);
 
-  double get balance => totalIncome - totalExpense;
+    Map<String, double> getExpenseCategoryTotals(List<TransactionModel> transact) {
+    final Map<String, double> totals = {};
+
+    final expenses=transact.where((t)=>!t.isIncome); 
+
+    for (var t in expenses) {
+      if (totals.containsKey(t.category)) {
+        totals[t.category] = totals[t.category]! + t.amount; 
+        } else {
+        totals[t.category] = t.amount;
+      }
+    }
+    return totals;
+  }
 }
