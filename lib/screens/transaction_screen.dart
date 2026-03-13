@@ -5,6 +5,7 @@ import '../services/addTransaction.dart';
 
 class TransactionScreen extends StatelessWidget {
   final TransactionService transactionService;
+  
   final VoidCallback onDataChanged;
 
   const TransactionScreen({
@@ -22,7 +23,9 @@ class TransactionScreen extends StatelessWidget {
         onPressed: () async {
           final newTransaction = await showDialog<TransactionModel>(
             context: context,
-            builder: (_) => const AddTransaction(),
+            builder: (_) => AddTransaction(
+              transactionService: transactionService,
+            ),
           );
 
           if (newTransaction != null) {
@@ -87,6 +90,7 @@ class TransactionScreen extends StatelessWidget {
                           context: context,
                           builder: (_) => AddTransaction(
                             existingTransaction: transaction,
+                            transactionService: transactionService,
                           ),
                         );
 

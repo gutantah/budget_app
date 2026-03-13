@@ -4,7 +4,39 @@ enum TimeFilter { currentMonth, currentQuarter, currentYear, allTime }
 
 class TransactionService {
   final List<TransactionModel> _transactions = [];
+
+  final List<String> _categories = [
+    "necessities",
+    "wants",
+    "investments",
+    "general",
+    "Income",
+  ];
+  final List<String> _cards = [
+    "BT Card",
+    "CEC Card",
+    "Revolut Card",
+    "Pluxee Card",
+  ];
+
   List<TransactionModel> get transactions => _transactions;
+  List<String> get categories => _categories;
+  List<String> get cards => _cards;
+
+  void addCategory(String category) {
+    if(category.isNotEmpty && !_categories.contains(category)){
+      _categories.add(category);
+    }
+  }
+  void addCard(String cardName){
+    if(cardName.isNotEmpty && !_cards.contains(cardName)){
+      _cards.add(cardName);
+    }
+  }
+
+  List<String> getAvailableCards(){
+    return _transactions.map((t) => t.cardName).toSet().toList();
+  }
 
   void addTransaction(TransactionModel transaction) {
     _transactions.add(transaction);
@@ -21,7 +53,7 @@ class TransactionService {
     _transactions.removeWhere((t) => t.id == id);
   }
 
-  List<TransactionModel> getFilteredTransactions(TimeFilter filter){
+  List<TransactionModel> getFilteredTransactions(TimeFilter filter, {String? cardName}) {
     final now = DateTime.now();
     DateTime startDate;
     switch (filter) {
@@ -36,9 +68,14 @@ class TransactionService {
         startDate = DateTime(now.year, 1, 1);
         break;
       case TimeFilter.allTime:
-        return _transactions; 
+        startDate = DateTime(1900);
+        break;
     }
-    return _transactions.where((t) => !t.date.isBefore(startDate)).toList();
+    var filtered = _transactions.where((t)=> !t.date.isBefore(startDate)).toList();
+    if(cardName != null && cardName != "All Cards"){
+      filtered = filtered.where((t) => t.cardName == cardName).toList();
+    }
+    return filtered;
   }
     double calculateTotalIncome(List<TransactionModel> transact) {
       return transact.where((t) => t.isIncome).fold(0, (sum, t) => sum + t.amount);

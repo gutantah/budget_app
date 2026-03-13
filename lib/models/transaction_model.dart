@@ -5,6 +5,7 @@ class TransactionModel {
   final String category;
   final DateTime date;
   final bool isIncome;
+  final String cardName;
 
   TransactionModel({
     required this.id,
@@ -13,5 +14,6 @@ class TransactionModel {
     required this.category,
     required this.date,
     required this.isIncome,
+    required this.cardName,
   });
 }
